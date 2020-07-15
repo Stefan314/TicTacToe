@@ -89,14 +89,12 @@ def player_is_human(player):
     return True if player["player_type"].get() == human_player else False
 
 
-# TODO: if all squares are filled in, make sure that on the screen its displayed that there's a tie
-#  and that the game can be restarted with r
 class TicTacToe:
 
     # Sets up the root and some fields and launches the State class
     def __init__(self):
         self.players = {}
-        self.win = False
+        self.end = False
         self.current_player_id = None
         self.current_coord = {}
 
@@ -204,16 +202,25 @@ class TicTacToe:
         column = self.current_coord["x"] if column is None else column
         row = self.current_coord["y"] if row is None else row
 
+        prev_label = self.state.states[STATES[GAME]].field_labels[self.current_coord["y"]][self.current_coord["x"]]
+        # Update the current square
+        self.current_coord["x"] = column
+        self.current_coord["y"] = row
+
         game_state = self.state.states[STATES[GAME]]
         field = game_state.field
         # Can only alter the field if there is nothing in it and the game is not won
-        if field[row][column] is None and not self.win:
+        if field[row][column] is None and not self.end:
+            self.highlight_square(prev_label)
             field[row][column] = self.current_player_id
             game_state.field_labels[row][column].configure(text=PLAYERS[self.current_player_id])
             win_id = self.is_win()
 
             if win_id is not None:
-                self.set_win()
+                win_text = "Congratulations, " + self.state.players[self.current_player_id]["name"] + ", you have won"
+                self.set_end(win_text)
+            elif self.field_is_filled():
+                self.set_end("The field is filled and the result is a tie")
             else:
                 self.next_player()
 
@@ -239,12 +246,17 @@ class TicTacToe:
         return win_id
 
     # Puts a label on the screen, saying that the player has won
-    def set_win(self):
-        self.win = True
+    def set_end(self, end_text):
+        self.end = True
         game_state = self.state.states[STATES[GAME]]
-        win_text = "Congratulations, " + self.state.players[self.current_player_id]["name"] + ", you have won"
-        game_state.win_label.configure(text=win_text)
+        game_state.win_label.configure(text=end_text)
         game_state.win_frame.grid(row=3, column=0, columnspan=3)
+
+    def field_is_filled(self):
+        for row in self.state.states[STATES[GAME]].field:
+            if row.__contains__(None):
+                return False
+        return True
 
     # Clears the field, the squares, the label that said a player has won and calls update_players()
     def clear_field(self):
@@ -255,7 +267,7 @@ class TicTacToe:
 
     # Makes sure that a random starting player is selected
     def update_players(self):
-        self.win = False
+        self.end = False
         self.current_player_id = random.randint(0, 1)
         self.next_player()
 

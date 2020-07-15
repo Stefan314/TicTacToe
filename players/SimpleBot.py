@@ -33,7 +33,6 @@ class SimpleBot(Player):
             if row.count(id) == 2:
                 for j in range(len(row)):
                     if row[j] is None:
-                        print(i, j)
                         return {"row": i, "column": j}
 
         # Checks the columns
@@ -46,12 +45,10 @@ class SimpleBot(Player):
                 elif element is None:
                     chosen_square = {"row": i, "column": j}
             if id_counter == 2 and chosen_square is not None:
-                print(chosen_square)
                 return chosen_square
             else:
                 chosen_square = None
 
-        # TODO: find if has error
         # Checks the diagonal line upper-left to bottom-right
         id_counter = 0
         for i in range(len(self.field)):
@@ -61,7 +58,6 @@ class SimpleBot(Player):
             elif element is None:
                 chosen_square = {"row": i, "column": i}
         if id_counter == 2 and chosen_square is not None:
-            print(chosen_square)
             return chosen_square
         else:
             chosen_square = None
@@ -76,7 +72,6 @@ class SimpleBot(Player):
             elif element is None:
                 chosen_square = {"row": i, "column": column}
         if id_counter == 2 and chosen_square is not None:
-            print(chosen_square)
             return chosen_square
         else:
             chosen_square = None
