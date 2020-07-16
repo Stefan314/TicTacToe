@@ -10,5 +10,4 @@ class RandomBot(Player):
     #   A random square
     def choose_square(self, field):
         self.field = field
-        print(self.id)
         return self.choose_random_square()

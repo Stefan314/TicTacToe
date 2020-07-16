@@ -1,6 +1,7 @@
 import random
 
 from States.State import *
+from players.EasyBot import EasyBot
 from players.GreedyBest import GreedyBest
 from players.HardBot import HardBot
 from players.RandomBot import RandomBot
@@ -18,6 +19,8 @@ def player_factory(player_type_name, player_id):
         return None
     elif player_type_name == PLAYER_TYPES[RANDOM]:
         return RandomBot(player_id)
+    elif player_type_name == PLAYER_TYPES[EASY]:
+        return EasyBot(player_id)
     elif player_type_name == PLAYER_TYPES[MEDIUM]:
         return MediumBot(player_id)
     elif player_type_name == PLAYER_TYPES[HARD]:
@@ -110,7 +113,7 @@ class TicTacToe:
 
         # Default root attributes
         width = (SQUARE_SIZE + SQUARE_DST) * 3
-        height = width + SQUARE_SIZE + SQUARE_DST
+        height = width + 2 * SQUARE_SIZE
 
         root.configure(bg=BG_COLOUR)
         root.geometry(str(width) + "x" + str(height))
@@ -126,6 +129,14 @@ class TicTacToe:
         root.mainloop()
 
     # Main key_listener bound to the root
+    # Escape: exits the program
+    # If the current state is the settings-state then the following applies for the key-presses:
+    #   Enter: starts the game
+    # If the current state is the game-state then the following applies for the key-presses:
+    #   Enter: selects the highlighted square
+    #   Arrow-keys: moves the highlighted square
+    #   r: resets the field
+    #   u: lets the user alter the names and the player-kind
     def key_listener(self, event):
         if event.keysym == 'Escape':
             sys.exit()
@@ -201,6 +212,7 @@ class TicTacToe:
         for i, player in enumerate(state_players):
             self.players[i] = player_factory(player["player_type"].get(), i)
 
+        self.state.states[STATES[GAME]].reset_results()
         self.clear_field()
 
     # Alters the screen and the field accordingly, also checks whether a player has won
@@ -223,10 +235,9 @@ class TicTacToe:
             win_id = self.is_win()
 
             if win_id is not None:
-                win_text = "Congratulations, " + self.state.players[self.current_player_id]["name"] + ", you have won"
-                self.set_end(win_text)
+                self.set_end(self.state.players[self.current_player_id]["name"])
             elif self.field_is_filled():
-                self.set_end("The field is filled and the result is a tie")
+                self.set_end()
             else:
                 self.next_player()
 
@@ -252,11 +263,19 @@ class TicTacToe:
         return win_id
 
     # Puts a label on the screen, saying that the player has won
-    def set_end(self, end_text):
+    # Inputs:
+    #   player_name as a string, if it's not given then it's recorded as a tie
+    def set_end(self, player_name=None):
         self.end = True
+        end_text = "The field is filled and the result is a tie"
+        player_id = 2
+        if player_name is not None:
+            end_text = "Congratulations, " + player_name + ", you have won"
+            player_id = self.current_player_id
+        self.state.states[STATES[GAME]].add_win(player_id)
         game_state = self.state.states[STATES[GAME]]
         game_state.win_label.configure(text=end_text)
-        game_state.win_frame.grid(row=3, column=0, columnspan=3)
+        game_state.win_frame.grid(row=4, column=0, columnspan=3)
 
     def field_is_filled(self):
         for row in self.state.states[STATES[GAME]].field:

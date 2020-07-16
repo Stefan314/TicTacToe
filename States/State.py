@@ -7,12 +7,12 @@ SQUARE_COLOUR = "#ffffff"
 BG_COLOUR = "#e05e00"
 FIELD_BG_COLOUR = "#000000"
 
-WIN_FONT = ("consolas", 9)
+WIN_FONT = "consolas 9"
 
 WIDGET_PADDING = 5
 
-PLAYER_TYPES = ["Human", "RandomBot", "MediumBot", "HardBot", "Greedy Bot"]
-HUMAN, RANDOM, MEDIUM, HARD, GREEDY = 0, 1, 2, 3, 4
+PLAYER_TYPES = ["Human", "Random Bot", "Easy Bot", "Medium Bot", "Hard Bot", "Greedy Bot"]
+HUMAN, RANDOM, EASY, MEDIUM, HARD, GREEDY = 0, 1, 2, 3, 4, 5
 
 STATES = ["Settings", "Game"]
 SETTINGS, GAME = 0, 1
@@ -22,9 +22,9 @@ SETTINGS, GAME = 0, 1
 #   The widget must have an assigned parent;
 #   The widget can only be a label;
 #   The widget must also be assigned in a grid environment.
-def create_label(widget, text, row=0, column=0, columnspan=1, padx=WIDGET_PADDING):
+def create_label(widget, text, row=0, column=0, columnspan=1, padx=WIDGET_PADDING, sticky="nsew"):
     widget.configure(text=text, bg=BG_COLOUR)
-    widget.grid(row=row, column=column, columnspan=columnspan, padx=padx)
+    widget.grid(row=row, column=column, columnspan=columnspan, padx=padx, sticky=sticky)
     return widget
 
 
@@ -59,11 +59,11 @@ def create_dropdown(widget, row=0, column=1, columnspan=1):
 # Creates the requested state, if it doesn't exist it throws an exception
 # Requirements:
 #   state must be given as a string
-def state_factory(state, root):
+def state_factory(state, root, player_names=None):
     if state == STATES[SETTINGS]:
         return Settings(root)
     elif state == STATES[GAME]:
-        return Game(root)
+        return Game(root, player_names)
     else:
         raise Exception("Wrong name")
 
@@ -103,7 +103,7 @@ class State:
     #   state_name must be in state_factory
     def update_state(self, state_name):
         if not self.states.keys().__contains__(state_name):
-            new_state = state_factory(state_name, self.root)
+            new_state = state_factory(state_name, self.root, self.players)
             self.states[state_name] = new_state
             if state_name == STATES[GAME]:
                 new_state.update_button.configure(command=lambda: self.update_state(STATES[SETTINGS]))
@@ -120,14 +120,26 @@ class State:
 class Game:
 
     # Creates the main frame of the game state with all widgets
-    def __init__(self, root):
+    def __init__(self, root, player_names):
         game_frame = Frame(root, bg=BG_COLOUR)
         game_frame.grid(row=0, column=0, sticky="nsew")
+
+        instruction_frame = Frame(game_frame, bg=BG_COLOUR)
 
         self.reset_button = create_button(Button(game_frame), "Reset Game", 0, 0)
         self.update_button = create_button(Button(game_frame), "Update Players", 0, 1)
         player_name = "[PLAYER]"
-        self.turnlabel = create_label(Label(game_frame), "It's " + player_name + "'s turn", row=1, columnspan=2)
+        self.turnlabel = create_label(Label(game_frame), "It's " + player_name + "'s turn", row=2, columnspan=2)
+
+        self.result_labels = []
+        result_frame = Frame(game_frame, bg=BG_COLOUR)
+        create_label(Label(result_frame), player_names[0]["name"])
+        create_label(Label(result_frame), "Tie", column=1)
+        create_label(Label(result_frame), player_names[1]["name"], column=2)
+        self.result_labels.append(create_label(Label(result_frame), "-", row=1))
+        self.result_labels.append(create_label(Label(result_frame), "-", row=1, column=1))
+        self.result_labels.append(create_label(Label(result_frame), "-", row=1, column=2))
+        result_frame.grid(row=1, column=0, columnspan=3)
 
         field_frame = Frame(game_frame, bg=FIELD_BG_COLOUR)
         self.field_labels = [[], [], []]
@@ -135,13 +147,14 @@ class Game:
         for i in range(len(self.field)):
             for j in range(len(self.field)):
                 self.create_square(field_frame, i, j)
-        field_frame.grid(row=2, column=0, columnspan=3)
+        field_frame.grid(row=3, column=0, columnspan=3)
 
         win_frame = Frame(game_frame, bg=BG_COLOUR)
+        win_frame.option_add("*font", WIN_FONT)
         win_text = ""
         info_text = "Press r to reset the game"
-        self.win_label = create_label(Label(win_frame, font=WIN_FONT), win_text, row=0, columnspan=3)
-        create_label(Label(win_frame, font=WIN_FONT), info_text, row=1, columnspan=3)
+        self.win_label = create_label(Label(win_frame), win_text, row=0, columnspan=3)
+        create_label(Label(win_frame), info_text, row=1, columnspan=3)
 
         self.win_frame = win_frame
         self.field_frame = field_frame
@@ -166,6 +179,18 @@ class Game:
             for j in range(len(self.field_labels[i])):
                 self.field_labels[i][j].configure(text=" ", bg=SQUARE_COLOUR)
                 self.field[i][j] = None
+
+    # Increases the counter for the wins, if it's a tie you can leave out the player_id
+    def add_win(self, result_id=2):
+        if result_id != 0:
+            result_id = 1 if result_id == 2 else 2
+        result_label = self.result_labels[result_id]
+        result_label_text = str(1) if result_label['text'] == "-" else str(int(result_label['text']) + 1)
+        result_label.configure(text=result_label_text)
+
+    def reset_results(self):
+        for label in self.result_labels:
+            label.configure(text="-")
 
 
 class Settings:
