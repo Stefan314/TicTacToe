@@ -11,8 +11,8 @@ WIN_FONT = ("consolas", 9)
 
 WIDGET_PADDING = 5
 
-PLAYER_TYPES = ["Human", "RandomBot", "SimpleBot"]
-HUMAN, RANDOM, SIMPLE = 0, 1, 2
+PLAYER_TYPES = ["Human", "RandomBot", "MediumBot", "HardBot", "Greedy Bot"]
+HUMAN, RANDOM, MEDIUM, HARD, GREEDY = 0, 1, 2, 3, 4
 
 STATES = ["Settings", "Game"]
 SETTINGS, GAME = 0, 1
@@ -93,9 +93,8 @@ class State:
         player2_entry = current_state.player2_name_entry.get()
         player1_name = "Player 1" if not player1_entry else player1_entry
         player2_name = "Player 2" if not player2_entry else player2_entry
-        if not self.players:
-            self.players.extend([{"name": player1_name, "player_type": current_state.player1},
-                                {"name": player2_name, "player_type": current_state.player2}])
+        self.players = [{"name": player1_name, "player_type": current_state.player1},
+                        {"name": player2_name, "player_type": current_state.player2}]
         self.update_state(STATES[GAME])
 
     # Makes sure that the requested stated will be the new one.

@@ -1,8 +1,10 @@
 import random
 
 from States.State import *
+from players.GreedyBest import GreedyBest
+from players.HardBot import HardBot
 from players.RandomBot import RandomBot
-from players.SimpleBot import SimpleBot
+from players.MediumBot import MediumBot
 
 HIGHLIGHT_COLOUR = "#f4ffb0"
 PLAYERS = {0: "x", 1: "o"}
@@ -16,8 +18,12 @@ def player_factory(player_type_name, player_id):
         return None
     elif player_type_name == PLAYER_TYPES[RANDOM]:
         return RandomBot(player_id)
-    elif player_type_name == PLAYER_TYPES[SIMPLE]:
-        return SimpleBot(player_id)
+    elif player_type_name == PLAYER_TYPES[MEDIUM]:
+        return MediumBot(player_id)
+    elif player_type_name == PLAYER_TYPES[HARD]:
+        return HardBot(player_id)
+    elif player_type_name == PLAYER_TYPES[GREEDY]:
+        return GreedyBest(player_id)
 
 
 # Output:
