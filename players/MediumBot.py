@@ -1,12 +1,15 @@
 from players.Player import Player
 
 
-# Chooses a square that would either be a finishing move or a block
 class MediumBot(Player):
 
     def __init__(self, id):
         super().__init__(id)
 
+    # Output:
+    #   Square that would finish a line of its own;
+    #   else a square that would block its opponents line;
+    #   else a random square
     def choose_square(self, field):
         self.field = field
 

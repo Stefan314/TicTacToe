@@ -1,7 +1,6 @@
 from players.Player import Player
 
 
-# Chooses a square that would either be a finishing move or a block
 class GreedyBest(Player):
 
     def __init__(self, id):
