@@ -11,8 +11,8 @@ WIN_FONT = "consolas 9"
 
 WIDGET_PADDING = 5
 
-PLAYER_TYPES = ["Human", "Random Bot", "Easy Bot", "Medium Bot", "Hard Bot", "Greedy Bot"]
-HUMAN, RANDOM, EASY, MEDIUM, HARD, GREEDY = 0, 1, 2, 3, 4, 5
+PLAYER_TYPES = ["Human", "Random Bot", "Easy Bot", "Medium Bot", "Hard Bot", "Extreme Bot", "Greedy Bot"]
+HUMAN, RANDOM, EASY, MEDIUM, HARD, EXTREME, GREEDY = 0, 1, 2, 3, 4, 5, 6
 
 STATES = ["Settings", "Game"]
 SETTINGS, GAME = 0, 1

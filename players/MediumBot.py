@@ -1,10 +1,10 @@
-from players.Player import Player
+from players.Player import *
 
 
 class MediumBot(Player):
 
-    def __init__(self, id):
-        super().__init__(id)
+    def __init__(self, player_id):
+        super().__init__(player_id)
 
     # Output:
     #   Square that would finish a line of its own;
@@ -12,14 +12,19 @@ class MediumBot(Player):
     #   else a random square
     def choose_square(self, field):
         self.field = field
+        chosen_square = None
 
         # Finish a line of its own
-        chosen_square = self.finish_square(self.id)
+        finishing_squares = self.finish_squares(self.id)
+        if chosen_square is None:
+            chosen_square = random_element_from_list(finishing_squares)
 
         # Block a line of the opponent
+        blocking_squares = self.start_line_squares(self.id)
         if chosen_square is None:
-            chosen_square = self.block_square()
+            chosen_square = random_element_from_list(blocking_squares)
 
+        # Random square
         if chosen_square is None:
             chosen_square = self.choose_random_square()
         return chosen_square

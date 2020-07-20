@@ -2,6 +2,7 @@ import random
 
 from States.State import *
 from players.EasyBot import EasyBot
+from players.ExtremeBot import ExtremeBot
 from players.GreedyBest import GreedyBest
 from players.HardBot import HardBot
 from players.RandomBot import RandomBot
@@ -12,6 +13,8 @@ PLAYERS = {0: "x", 1: "o"}
 
 DEFAULT_FONT = "consolas 12"
 DEFAULT_FONT_COLOUR = "#001670"
+
+WINDOW_COORD = "+600+100"
 
 
 def player_factory(player_type_name, player_id):
@@ -25,6 +28,8 @@ def player_factory(player_type_name, player_id):
         return MediumBot(player_id)
     elif player_type_name == PLAYER_TYPES[HARD]:
         return HardBot(player_id)
+    elif player_type_name == PLAYER_TYPES[EXTREME]:
+        return ExtremeBot(player_id)
     elif player_type_name == PLAYER_TYPES[GREEDY]:
         return GreedyBest(player_id)
 
@@ -116,7 +121,7 @@ class TicTacToe:
         height = width + 2 * SQUARE_SIZE
 
         root.configure(bg=BG_COLOUR)
-        root.geometry(str(width) + "x" + str(height))
+        root.geometry(str(width) + "x" + str(height) + WINDOW_COORD)
         root.title("TicTacToe")
         root.iconbitmap("Images/game_icon.ico")
         root.bind("<Key>", self.key_listener)
