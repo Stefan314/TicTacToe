@@ -1,11 +1,12 @@
 from players.Player import *
 
 
-class ExtremeBot(Player):
+class ImpossibleBot(Player):
 
     def __init__(self, id):
         super().__init__(id)
 
+    '''
     # Output:
     #   Square that would finish a line of its own;
     #   else a square that blocks an opponents line, starts a line of its own
@@ -60,4 +61,4 @@ class ExtremeBot(Player):
         if chosen_square is None:
             chosen_square = tactical_element(stop_line_squares)
 
-        return chosen_square if chosen_square is not None else self.choose_semi_random_square()
+        return chosen_square if chosen_square is not None else self.choose_semi_random_square()'''

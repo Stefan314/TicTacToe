@@ -3,8 +3,8 @@ from players.Player import *
 
 class HardBot(Player):
 
-    def __init__(self, player_id):
-        super().__init__(player_id)
+    def __init__(self, id):
+        super().__init__(id)
 
     # Output:
     #   Square that would finish a line of its own;
@@ -19,7 +19,7 @@ class HardBot(Player):
         # Finish a line of its own
         finishing_squares = self.finish_squares(self.id)
         if chosen_square is None:
-            chosen_square = random_element_from_list(finishing_squares)
+            chosen_square = tactical_element(finishing_squares)
 
         blocked_squares = self.block_squares()
         start_line_squares = self.start_line_squares(self.id)
@@ -31,11 +31,11 @@ class HardBot(Player):
 
         # Block a line of the opponent
         if chosen_square is None:
-            chosen_square = random_element_from_list(blocked_squares)
+            chosen_square = tactical_element(blocked_squares)
 
         # Start a line
         if chosen_square is None:
-            chosen_square = random_element_from_list(start_line_squares)
+            chosen_square = tactical_element(start_line_squares)
 
         if chosen_square is None:
             chosen_square = self.choose_random_square()

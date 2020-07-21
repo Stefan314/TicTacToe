@@ -3,9 +3,10 @@ from players.Player import *
 
 class GreedyBest(Player):
 
-    def __init__(self, player_id):
-        super().__init__(player_id)
+    def __init__(self, id):
+        super().__init__(id)
 
+    '''
     def choose_square(self, field):
         self.field = field
 
@@ -18,4 +19,4 @@ class GreedyBest(Player):
 
         if chosen_square is None:
             chosen_square = self.choose_random_square()
-        return chosen_square
+        return chosen_square'''

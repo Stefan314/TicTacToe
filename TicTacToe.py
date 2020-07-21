@@ -1,10 +1,14 @@
 import random
+import sys
+from tkinter import Tk
 
-from States.State import *
+from States.State import State, PLAYER_TYPES, HUMAN, RANDOM, EASY, MEDIUM, HARD, EXTREME, IMPOSSIBLE, GREEDY, \
+    SQUARE_SIZE, SQUARE_DST, STATES, SETTINGS, BG_COLOUR, GAME, SQUARE_COLOUR
 from players.EasyBot import EasyBot
 from players.ExtremeBot import ExtremeBot
 from players.GreedyBest import GreedyBest
 from players.HardBot import HardBot
+from players.ImpossibleBot import ImpossibleBot
 from players.RandomBot import RandomBot
 from players.MediumBot import MediumBot
 
@@ -15,6 +19,8 @@ DEFAULT_FONT = "consolas 12"
 DEFAULT_FONT_COLOUR = "#001670"
 
 WINDOW_COORD = "+600+100"
+
+TEST = False
 
 
 def player_factory(player_type_name, player_id):
@@ -30,6 +36,8 @@ def player_factory(player_type_name, player_id):
         return HardBot(player_id)
     elif player_type_name == PLAYER_TYPES[EXTREME]:
         return ExtremeBot(player_id)
+    elif player_type_name == PLAYER_TYPES[IMPOSSIBLE]:
+        return ImpossibleBot(player_id)
     elif player_type_name == PLAYER_TYPES[GREEDY]:
         return GreedyBest(player_id)
 
@@ -107,6 +115,9 @@ class TicTacToe:
 
     # Sets up the root and some fields and launches the State class
     def __init__(self):
+        self.turn = 0
+        self.stop = False
+
         self.players = {}
         self.end = False
         self.current_player_id = None
@@ -175,7 +186,8 @@ class TicTacToe:
 
             # Resets the game
             if event.keysym == 'r':
-                self.clear_field()
+                if not TEST or not self.stop:
+                    self.clear_field()
 
             # Goes back to the settings menu to alter values there
             if event.keysym == 'u':
@@ -188,6 +200,8 @@ class TicTacToe:
 
     # Launches and displays the game state
     def start_game(self):
+        self.stop = False
+
         # Checks if the game state has already been altered accordingly before
         first_time = False
         if not self.state.states.keys().__contains__(STATES[GAME]):
@@ -236,10 +250,16 @@ class TicTacToe:
         if field[row][column] is None and not self.end:
             self.highlight_square(prev_label)
             field[row][column] = self.current_player_id
-            game_state.field_labels[row][column].configure(text=PLAYERS[self.current_player_id])
+            text = PLAYERS[self.current_player_id]
+            if TEST:
+                text += " " + str(self.turn)
+            game_state.field_labels[row][column].configure(text=text)
             win_id = self.is_win()
 
             if win_id is not None:
+                if TEST:
+                    if self.current_player_id == 1:
+                        self.stop = True
                 self.set_end(self.state.players[self.current_player_id]["name"])
             elif self.field_is_filled():
                 self.set_end()
@@ -261,11 +281,7 @@ class TicTacToe:
         if win_id is not None:
             return win_id
 
-        win_id = diagonal_check(field)
-        if win_id is not None:
-            return win_id
-
-        return win_id
+        return diagonal_check(field)
 
     # Puts a label on the screen, saying that the player has won
     # Inputs:
@@ -277,6 +293,7 @@ class TicTacToe:
         if player_name is not None:
             end_text = "Congratulations, " + player_name + ", you have won"
             player_id = self.current_player_id
+
         self.state.states[STATES[GAME]].add_win(player_id)
         game_state = self.state.states[STATES[GAME]]
         game_state.win_label.configure(text=end_text)
@@ -297,17 +314,21 @@ class TicTacToe:
 
     # Makes sure that a random starting player is selected
     def update_players(self):
+        self.turn = 0
+
         self.end = False
         self.current_player_id = random.randint(0, 1)
         self.next_player()
 
     def next_player(self):
+        self.turn += 1
+
         self.current_player_id = 0 if self.current_player_id == 1 else 1
         current_player = self.state.players[self.current_player_id]
         self.state.update_turnlabel(current_player["name"], PLAYERS[self.current_player_id])
         current_label = self.state.states[STATES[GAME]].field_labels[self.current_coord["y"]][self.current_coord["x"]]
         self.highlight_square(current_label)
-        if not player_is_human(current_player):
+        if not player_is_human(current_player) and (not TEST or not self.stop):
             player = self.players[self.current_player_id]
             coordinates = player.choose_square(self.state.states[STATES[GAME]].field)
             row = coordinates["row"]

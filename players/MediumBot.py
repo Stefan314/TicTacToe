@@ -3,8 +3,8 @@ from players.Player import *
 
 class MediumBot(Player):
 
-    def __init__(self, player_id):
-        super().__init__(player_id)
+    def __init__(self, id):
+        super().__init__(id)
 
     # Output:
     #   Square that would finish a line of its own;
@@ -17,12 +17,12 @@ class MediumBot(Player):
         # Finish a line of its own
         finishing_squares = self.finish_squares(self.id)
         if chosen_square is None:
-            chosen_square = random_element_from_list(finishing_squares)
+            chosen_square = tactical_element(finishing_squares)
 
         # Block a line of the opponent
         blocking_squares = self.start_line_squares(self.id)
         if chosen_square is None:
-            chosen_square = random_element_from_list(blocking_squares)
+            chosen_square = tactical_element(blocking_squares)
 
         # Random square
         if chosen_square is None:

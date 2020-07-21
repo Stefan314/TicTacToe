@@ -1,11 +1,38 @@
 import random
 
 
-# Returns an element from the list. If the list is empty, it returns None
-def random_element_from_list(given_list):
-    if len(given_list) == 0:
+# Output:
+#   Element from the list. Preferences is as follows:
+#       Middle-element > Corner > Rest
+#   If the list is empty, it returns None.
+def tactical_element(list):
+    if len(list) == 0:
         return None
-    return random.choice(given_list)
+
+    corner_squares = []
+    for element in list:
+        row = element["row"]
+        col = element["column"]
+        if row == 0:
+            if col != 1:
+                corner_squares.append(element)
+        elif row == 1:
+            if col == 1:
+                return element
+        elif row == 2:
+            if col != 1:
+                corner_squares.append(element)
+
+    return random.choice(corner_squares) if len(corner_squares) != 0 else random.choice(list)
+
+
+# Output:
+#   Random element from the list.
+#   If list is empty, it returns None
+def random_element(list):
+    if len(list) == 0:
+        return None
+    return random.choice(list)
 
 
 # Parent class to the players
@@ -25,14 +52,23 @@ class Player:
 
     # Finds a random available square and returns it
     def choose_random_square(self):
-        converted_field = []
+        return random.choice(self.available_squares())
+
+    # Output:
+    #   Random square with the same preference as tactical_element()
+    def choose_semi_random_square(self):
+        return tactical_element(self.available_squares())
+
+    # Output:
+    #   List of all elements in the field that are None
+    def available_squares(self):
+        available_squares = []
         for i, row in enumerate(self.field):
             for j, element in enumerate(row):
                 if element is None:
-                    converted_field.append((i, j))
-        random_square = converted_field[random.randint(0, (len(converted_field) - 1))]
-        coordinate = {"row": random_square[0], "column": random_square[1]}
-        return coordinate
+                    available_squares.append({"row": i, "column": j})
+
+        return available_squares
 
     # Output:
     #   List of coordinates that would block a line of the opponent.
@@ -41,13 +77,13 @@ class Player:
 
     # Output:
     #   List of coordinates that can finish a line of the given id.
-    def finish_squares(self, player_id):
+    def finish_squares(self, id):
         chosen_square = None
         finishing_squares = []
 
         # Checks the rows
         for i, row in enumerate(self.field):
-            if row.count(player_id) == 2:
+            if row.count(id) == 2:
                 for j in range(len(row)):
                     if row[j] is None:
                         finishing_squares.append({"row": i, "column": j})
@@ -57,7 +93,7 @@ class Player:
             id_counter = 0
             for i in range(len(self.field)):
                 element = self.field[i][j]
-                if element == player_id:
+                if element == id:
                     id_counter += 1
                 elif element is None:
                     chosen_square = {"row": i, "column": j}
@@ -71,7 +107,7 @@ class Player:
         id_counter = 0
         for i in range(len(self.field)):
             element = self.field[i][i]
-            if element == player_id:
+            if element == id:
                 id_counter += 1
             elif element is None:
                 chosen_square = {"row": i, "column": i}
@@ -84,7 +120,7 @@ class Player:
         for i in range(len(self.field)):
             column = len(self.field) - 1 - i
             element = self.field[i][column]
-            if element == player_id:
+            if element == id:
                 id_counter += 1
             elif element is None:
                 chosen_square = {"row": i, "column": column}
@@ -100,12 +136,12 @@ class Player:
 
     # Output:
     #   List of coordinates that would start a line of the given id, which could be finished the next turn
-    def start_line_squares(self, player_id):
+    def start_line_squares(self, id):
         potential_squares = []
 
         # Checks the rows
         for i, row in enumerate(self.field):
-            if row.count(player_id) == 1 and row.count(None) == 2:
+            if row.count(id) == 1 and row.count(None) == 2:
                 for j in range(len(row)):
                     if row[j] is None:
                         potential_squares.append({"row": i, "column": j})
@@ -116,7 +152,7 @@ class Player:
             column_squares = []
             for i in range(len(self.field)):
                 element = self.field[i][j]
-                if element == player_id:
+                if element == id:
                     id_counter += 1
                 elif element is None:
                     column_squares.append({"row": i, "column": j})
@@ -128,7 +164,7 @@ class Player:
         dia_squares = []
         for i in range(len(self.field)):
             element = self.field[i][i]
-            if element == player_id:
+            if element == id:
                 id_counter += 1
             elif element is None:
                 dia_squares.append({"row": i, "column": i})
@@ -141,7 +177,7 @@ class Player:
         for i in range(len(self.field)):
             column = len(self.field) - 1 - i
             element = self.field[i][column]
-            if element == player_id:
+            if element == id:
                 id_counter += 1
             elif element is None:
                 chosen_square = {"row": i, "column": column}
