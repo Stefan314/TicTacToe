@@ -4,6 +4,7 @@ from tkinter import Tk
 
 from States.State import State, PLAYER_TYPES, HUMAN, RANDOM, EASY, MEDIUM, HARD, EXTREME, IMPOSSIBLE, GREEDY, \
     SQUARE_SIZE, SQUARE_DST, STATES, SETTINGS, BG_COLOUR, GAME, SQUARE_COLOUR
+from players.Player import is_win, field_is_filled
 from players.EasyBot import EasyBot
 from players.ExtremeBot import ExtremeBot
 from players.GreedyBest import GreedyBest
@@ -12,17 +13,26 @@ from players.ImpossibleBot import ImpossibleBot
 from players.RandomBot import RandomBot
 from players.MediumBot import MediumBot
 
+ID_PLAYER1 = 0
+ID_PLAYER2 = 1
+ID_PLAYER_WRONG = 2
+
 HIGHLIGHT_COLOUR = "#f4ffb0"
-PLAYERS = {0: "x", 1: "o"}
+PLAYERS = {ID_PLAYER1: "x", ID_PLAYER2: "o"}
 
 DEFAULT_FONT = "consolas 12"
 DEFAULT_FONT_COLOUR = "#001670"
 
 WINDOW_COORD = "+600+100"
 
+DISPLAY_TURN = True
 TEST = False
+STATISTICS = True
+
+AMOUNT_OF_SIMULATIONS = 1000
 
 
+# TODO 2: Add icon to the application as well. Not just in the top-left
 def player_factory(player_type_name, player_id):
     if player_type_name == PLAYER_TYPES[HUMAN]:
         return None
@@ -42,69 +52,6 @@ def player_factory(player_type_name, player_id):
         return GreedyBest(player_id)
 
 
-# Output:
-#   id of repeated element in a column or None if there is none
-def vertical_check(field):
-    for i in range(len(field[0])):
-        counter = 0
-        first_element = field[0][i]
-        for j in range(len(field)):
-            element = field[j][i]
-            if first_element != element or element is None:
-                break
-            else:
-                counter += 1
-        if counter == len(field):
-            return first_element
-    return None
-
-
-# Output:
-#   id of repeated element in a row or None if there is none
-def horizontal_check(field):
-    for row in field:
-        counter = 0
-        first_element = row[0]
-        for element in row:
-            if element != first_element or element is None:
-                break
-            else:
-                counter += 1
-        if counter == len(row):
-            return first_element
-    return None
-
-
-# Output:
-#   id of repeated element in a diagonal line (from upper-left to bottom-right or upper-right to bottom-left)
-#       or None if there is none
-def diagonal_check(field):
-    # Upper-left to bottom-right
-    first_element = field[0][0]
-    counter = 0
-    for i in range(len(field)):
-        element = field[i][i]
-        if first_element != element or element is None:
-            break
-        else:
-            counter += 1
-    if counter == len(field):
-        return first_element
-
-    # Upper-right to bottom-left
-    first_element = field[0][len(field) - 1]
-    counter = 0
-    for i in range(len(field)):
-        element = field[i][len(field) - 1 - i]
-        if first_element != element or element is None:
-            break
-        else:
-            counter += 1
-    if counter == len(field):
-        return first_element
-    return None
-
-
 # Main class of the game
 def player_is_human(player):
     human_player = PLAYER_TYPES[HUMAN]
@@ -117,6 +64,7 @@ class TicTacToe:
     def __init__(self):
         self.turn = 0
         self.stop = False
+        self.simulate_games = 0
 
         self.players = {}
         self.end = False
@@ -153,6 +101,7 @@ class TicTacToe:
     #   Arrow-keys: moves the highlighted square
     #   r: resets the field
     #   u: lets the user alter the names and the player-kind
+    #   s: if the STATISTICS boolean is true, it will simulate AMOUNT_OF_SIMULATIONS amount of games
     def key_listener(self, event):
         if event.keysym == 'Escape':
             sys.exit()
@@ -192,6 +141,9 @@ class TicTacToe:
             # Goes back to the settings menu to alter values there
             if event.keysym == 'u':
                 self.state.update_state(STATES[SETTINGS])
+
+            if STATISTICS and event.keysym == 's' and (not TEST or not self.stop) and self.players_are_not_human():
+                self.clear_field()
 
             if player_is_human(self.state.players[self.current_player_id]):
                 # Select the highlighted square
@@ -251,37 +203,20 @@ class TicTacToe:
             self.highlight_square(prev_label)
             field[row][column] = self.current_player_id
             text = PLAYERS[self.current_player_id]
-            if TEST:
+            if DISPLAY_TURN:
                 text += " " + str(self.turn)
             game_state.field_labels[row][column].configure(text=text)
-            win_id = self.is_win()
+            win_id = is_win(self.state.states[STATES[GAME]].field)
 
             if win_id is not None:
                 if TEST:
-                    if self.current_player_id == 1:
+                    if self.current_player_id == ID_PLAYER2:
                         self.stop = True
                 self.set_end(self.state.players[self.current_player_id]["name"])
-            elif self.field_is_filled():
+            elif field_is_filled(self.state.states[STATES[GAME]].field):
                 self.set_end()
             else:
                 self.next_player()
-
-    # Checks if a player has won
-    # Output:
-    #   id of repeated element in a row, column or diagonal line (see diagonal_check())
-    #       or None if there is none
-    def is_win(self):
-        field = self.state.states[STATES[GAME]].field
-
-        win_id = horizontal_check(field)
-        if win_id is not None:
-            return win_id
-
-        win_id = vertical_check(field)
-        if win_id is not None:
-            return win_id
-
-        return diagonal_check(field)
 
     # Puts a label on the screen, saying that the player has won
     # Inputs:
@@ -289,7 +224,7 @@ class TicTacToe:
     def set_end(self, player_name=None):
         self.end = True
         end_text = "The field is filled and the result is a tie"
-        player_id = 2
+        player_id = ID_PLAYER_WRONG
         if player_name is not None:
             end_text = "Congratulations, " + player_name + ", you have won"
             player_id = self.current_player_id
@@ -299,11 +234,11 @@ class TicTacToe:
         game_state.win_label.configure(text=end_text)
         game_state.win_frame.grid(row=4, column=0, columnspan=3)
 
-    def field_is_filled(self):
-        for row in self.state.states[STATES[GAME]].field:
-            if row.__contains__(None):
-                return False
-        return True
+        # TODO 1: Figure out how to put this in some main loop.
+        # Run a simulation to check which bot is the best
+        # if self.simulate_games < 1000:
+        #     self.simulate_games += 1
+        #     self.clear_field()
 
     # Clears the field, the squares, the label that said a player has won and calls update_players()
     def clear_field(self):
@@ -317,13 +252,14 @@ class TicTacToe:
         self.turn = 0
 
         self.end = False
-        self.current_player_id = random.randint(0, 1)
+        rand_id_assigner = random.random()
+        self.current_player_id = ID_PLAYER1 if rand_id_assigner < 0.5 else ID_PLAYER2
         self.next_player()
 
     def next_player(self):
         self.turn += 1
 
-        self.current_player_id = 0 if self.current_player_id == 1 else 1
+        self.current_player_id = ID_PLAYER1 if self.current_player_id == ID_PLAYER2 else ID_PLAYER2
         current_player = self.state.players[self.current_player_id]
         self.state.update_turnlabel(current_player["name"], PLAYERS[self.current_player_id])
         current_label = self.state.states[STATES[GAME]].field_labels[self.current_coord["y"]][self.current_coord["x"]]
@@ -342,6 +278,9 @@ class TicTacToe:
         y = self.current_coord["y"]
         if player_is_human(self.state.players[self.current_player_id]):
             self.state.states[STATES[GAME]].field_labels[y][x].configure(bg=HIGHLIGHT_COLOUR)
+
+    def players_are_not_human(self):
+        return player_is_human(self.state.players[ID_PLAYER1]) and player_is_human(self.state.players[ID_PLAYER2])
 
 
 def launch(): TicTacToe()

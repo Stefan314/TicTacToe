@@ -3,8 +3,8 @@ from players.Player import Player
 
 class RandomBot(Player):
 
-    def __init__(self, id):
-        super().__init__(id)
+    def __init__(self, init_id):
+        super().__init__(init_id)
 
     # Output:
     #   A random square
